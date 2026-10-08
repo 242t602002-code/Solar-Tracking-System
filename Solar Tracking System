@@ -1,0 +1,84 @@
+#include <Arduino.h>
+#include <Servo.h>
+
+// LDR sensor pins
+const int LDR_TL = A0;  // Top Left
+const int LDR_TR = A1;  // Top Right
+const int LDR_BL = A2;  // Bottom Left
+const int LDR_BR = A3;  // Bottom Right
+
+// Servo motors
+Servo horizontalServo;
+Servo verticalServo;
+
+int horizontalAngle = 90;
+int verticalAngle = 90;
+
+const int tolerance = 50;
+
+void setup() {
+    horizontalServo.attach(9);
+    verticalServo.attach(10);
+
+    horizontalServo.write(horizontalAngle);
+    verticalServo.write(verticalAngle);
+
+    Serial.begin(9600);
+}
+
+void loop() {
+
+    // Read LDR values
+    int topLeft = analogRead(LDR_TL);
+    int topRight = analogRead(LDR_TR);
+    int bottomLeft = analogRead(LDR_BL);
+    int bottomRight = analogRead(LDR_BR);
+
+    // Calculate average light levels
+    int left = (topLeft + bottomLeft) / 2;
+    int right = (topRight + bottomRight) / 2;
+
+    int top = (topLeft + topRight) / 2;
+    int bottom = (bottomLeft + bottomRight) / 2;
+
+    // Horizontal tracking
+    if (abs(left - right) > tolerance) {
+
+        if (left > right) {
+            horizontalAngle++;
+        } else {
+            horizontalAngle--;
+        }
+
+        horizontalAngle = constrain(horizontalAngle, 0, 180);
+        horizontalServo.write(horizontalAngle);
+    }
+
+    // Vertical tracking
+    if (abs(top - bottom) > tolerance) {
+
+        if (top > bottom) {
+            verticalAngle++;
+        } else {
+            verticalAngle--;
+        }
+
+        verticalAngle = constrain(verticalAngle, 0, 180);
+        verticalServo.write(verticalAngle);
+    }
+
+    // Display values
+    Serial.print("Left: ");
+    Serial.print(left);
+
+    Serial.print(" | Right: ");
+    Serial.print(right);
+
+    Serial.print(" | Top: ");
+    Serial.print(top);
+
+    Serial.print(" | Bottom: ");
+    Serial.println(bottom);
+
+    delay(100);
+}
